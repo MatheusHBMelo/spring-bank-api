@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS tb_roles (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(20) CHECK (name IN ('USER', 'ADMIN')),
+    UNIQUE(name)
+);

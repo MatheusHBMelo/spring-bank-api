@@ -21,13 +21,10 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JoinColumn(nullable = false)
-    private String name;
+    @Column(nullable = false, unique = true)
+    private String username;
 
-    @JoinColumn(nullable = false, unique = true)
-    private String email;
-
-    @JoinColumn(nullable = false)
+    @Column(nullable = false)
     private String password;
 
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)

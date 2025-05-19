@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,12 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
+    private final TokenFilter tokenFilter;
+
+    public SecurityConfiguration(TokenFilter tokenFilter) {
+        this.tokenFilter = tokenFilter;
+    }
+
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
@@ -35,8 +42,10 @@ public class SecurityConfiguration {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(request -> {
                     request.requestMatchers(HttpMethod.POST, "/auth/register").permitAll();
+                    request.requestMatchers(HttpMethod.POST, "/auth/login").permitAll();
                     request.anyRequest().denyAll();
                 })
+                .addFilterBefore(tokenFilter, BasicAuthenticationFilter.class)
                 .build();
     }
 

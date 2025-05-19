@@ -1,5 +1,7 @@
 package br.com.springbank.service.user;
 
+import br.com.springbank.controller.auth.dto.LoginDto;
+import br.com.springbank.controller.auth.dto.LoginResponseDto;
 import br.com.springbank.controller.auth.dto.RegisterDto;
 import br.com.springbank.domain.entities.user.RoleEntity;
 import br.com.springbank.domain.entities.user.RoleEnum;
@@ -7,7 +9,11 @@ import br.com.springbank.domain.entities.user.StatusEnum;
 import br.com.springbank.domain.entities.user.UserEntity;
 import br.com.springbank.domain.repositories.RoleRepository;
 import br.com.springbank.domain.repositories.UserRepository;
+import br.com.springbank.service.token.TokenService;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -25,11 +31,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TokenService tokenService;
 
-    public UserDetailsServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public UserDetailsServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, TokenService tokenService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.tokenService = tokenService;
     }
 
     @Override
@@ -67,5 +75,30 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .build();
 
         this.userRepository.save(newUser);
+    }
+
+    public LoginResponseDto loginUser(LoginDto loginDto) {
+        String username = loginDto.username();
+        String password = loginDto.password();
+
+        Authentication authentication = this.validateCredentials(username, password);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String token = this.tokenService.createToken(authentication);
+
+        return new LoginResponseDto(username, "Usuario logado com sucesso", token, true);
+    }
+
+    private Authentication validateCredentials(String username, String password) {
+        UserDetails userDetails = this.loadUserByUsername(username);
+
+        if (userDetails == null) {
+            throw new RuntimeException("Credenciais erradas - Username não existe");
+        }
+
+        if (!passwordEncoder.matches(password, userDetails.getPassword())){
+            throw new RuntimeException("Credenciais erradas - Senha incorreta");
+        }
+
+        return new UsernamePasswordAuthenticationToken(userDetails.getUsername(), userDetails.getPassword(), userDetails.getAuthorities());
     }
 }

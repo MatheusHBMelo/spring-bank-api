@@ -1,5 +1,7 @@
 package br.com.springbank.controller.auth;
 
+import br.com.springbank.controller.auth.dto.LoginDto;
+import br.com.springbank.controller.auth.dto.LoginResponseDto;
 import br.com.springbank.controller.auth.dto.RegisterDto;
 import br.com.springbank.service.user.UserDetailsServiceImpl;
 import org.springframework.http.HttpStatus;
@@ -22,5 +24,10 @@ public class AuthController {
     public ResponseEntity<Void> register(@RequestBody RegisterDto registerDto) {
         this.userDetailsService.registerUser(registerDto);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PostMapping(path = "/login")
+    public ResponseEntity<LoginResponseDto> register(@RequestBody LoginDto loginDto) {
+        return ResponseEntity.status(HttpStatus.OK).body(this.userDetailsService.loginUser(loginDto));
     }
 }

@@ -1,4 +1,4 @@
-package br.com.springbank.domain.repositories;
+package br.com.springbank.domain.repositories.user;
 
 import br.com.springbank.domain.entities.user.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;

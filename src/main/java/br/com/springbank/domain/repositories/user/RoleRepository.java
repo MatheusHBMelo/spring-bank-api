@@ -1,4 +1,4 @@
-package br.com.springbank.domain.repositories;
+package br.com.springbank.domain.repositories.user;
 
 import br.com.springbank.domain.entities.user.RoleEntity;
 import br.com.springbank.domain.entities.user.RoleEnum;

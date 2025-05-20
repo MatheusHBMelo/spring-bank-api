@@ -3,13 +3,16 @@ package br.com.springbank.service.user;
 import br.com.springbank.controller.auth.dto.LoginDto;
 import br.com.springbank.controller.auth.dto.LoginResponseDto;
 import br.com.springbank.controller.auth.dto.RegisterDto;
+import br.com.springbank.domain.entities.account.AccountEntity;
 import br.com.springbank.domain.entities.user.RoleEntity;
 import br.com.springbank.domain.entities.user.RoleEnum;
 import br.com.springbank.domain.entities.user.StatusEnum;
 import br.com.springbank.domain.entities.user.UserEntity;
-import br.com.springbank.domain.repositories.RoleRepository;
-import br.com.springbank.domain.repositories.UserRepository;
+import br.com.springbank.domain.repositories.account.AccountRepository;
+import br.com.springbank.domain.repositories.user.RoleRepository;
+import br.com.springbank.domain.repositories.user.UserRepository;
 import br.com.springbank.service.token.TokenService;
+import br.com.springbank.utils.AccountNumberGenerator;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -21,6 +24,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,12 +36,17 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
+    private final AccountRepository accountRepository;
+    private final AccountNumberGenerator accountNumberGenerator;
 
-    public UserDetailsServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, TokenService tokenService) {
+    public UserDetailsServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder,
+                                  TokenService tokenService, AccountRepository accountRepository, AccountNumberGenerator accountNumberGenerator) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
+        this.accountRepository = accountRepository;
+        this.accountNumberGenerator = accountNumberGenerator;
     }
 
     @Override
@@ -74,7 +83,16 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        this.userRepository.save(newUser);
+        UserEntity userEntityCreated = this.userRepository.save(newUser);
+
+        AccountEntity newAccount = AccountEntity.builder()
+                .accountNumber(this.accountNumberGenerator.generate())
+                .agencyNumber("001")
+                .balance(BigDecimal.ZERO)
+                .userEntity(userEntityCreated)
+                .build();
+
+        this.accountRepository.save(newAccount);
     }
 
     public LoginResponseDto loginUser(LoginDto loginDto) {

@@ -24,7 +24,7 @@ public class TransactionEntity {
     @Enumerated(EnumType.STRING)
     private TransactionType type;
 
-    private BigDecimal ammount;
+    private BigDecimal amount;
 
     @ManyToOne
     @JoinColumn(name = "source_account_id")

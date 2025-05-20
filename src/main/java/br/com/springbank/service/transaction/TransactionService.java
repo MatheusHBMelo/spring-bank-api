@@ -61,7 +61,7 @@ public class TransactionService {
 
         TransactionEntity transaction = TransactionEntity.builder()
                 .type(TransactionType.TRANSFER)
-                .ammount(transferRequestDto.amount())
+                .amount(transferRequestDto.amount())
                 .sourceAccount(senderAccount)
                 .destinationAccount(receiverAccount)
                 .build();

@@ -43,6 +43,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(request -> {
                     request.requestMatchers(HttpMethod.POST, "/auth/register").permitAll();
                     request.requestMatchers(HttpMethod.POST, "/auth/login").permitAll();
+                    request.requestMatchers(HttpMethod.POST, "/transaction/transfer").authenticated();
                     request.anyRequest().denyAll();
                 })
                 .addFilterBefore(tokenFilter, BasicAuthenticationFilter.class)

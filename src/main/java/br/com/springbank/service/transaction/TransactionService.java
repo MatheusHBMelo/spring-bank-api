@@ -1,5 +1,6 @@
 package br.com.springbank.service.transaction;
 
+import br.com.springbank.controller.transaction.dto.DepositRequestDto;
 import br.com.springbank.controller.transaction.dto.TransferRequestDto;
 import br.com.springbank.domain.entities.account.AccountEntity;
 import br.com.springbank.domain.entities.account.TransactionEntity;
@@ -64,6 +65,35 @@ public class TransactionService {
                 .amount(transferRequestDto.amount())
                 .sourceAccount(senderAccount)
                 .destinationAccount(receiverAccount)
+                .build();
+
+        this.transactionRepository.save(transaction);
+    }
+
+    public void deposit(DepositRequestDto depositRequestDto) {
+        String token = request.getHeader("AUTHORIZATION").substring(7);
+        DecodedJWT decodedJWT = this.tokenService.recoveryToken(token);
+        String username = this.tokenService.extractUsername(decodedJWT);
+
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        AccountEntity userAccount = accountRepository.findByUserEntity(user)
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+
+        if (depositRequestDto.amount() == null || depositRequestDto.amount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("O valor do deposito deve ser no minimo R$0.01");
+        }
+
+        userAccount.setBalance(userAccount.getBalance().add(depositRequestDto.amount()));
+
+        this.accountRepository.save(userAccount);
+
+        TransactionEntity transaction = TransactionEntity.builder()
+                .type(TransactionType.DEPOSIT)
+                .amount(depositRequestDto.amount())
+                .sourceAccount(userAccount)
+                .destinationAccount(null)
                 .build();
 
         this.transactionRepository.save(transaction);

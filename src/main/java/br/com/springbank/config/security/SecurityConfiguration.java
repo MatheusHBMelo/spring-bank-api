@@ -44,6 +44,7 @@ public class SecurityConfiguration {
                     request.requestMatchers(HttpMethod.POST, "/auth/register").permitAll();
                     request.requestMatchers(HttpMethod.POST, "/auth/login").permitAll();
                     request.requestMatchers(HttpMethod.POST, "/transaction/transfer").authenticated();
+                    request.requestMatchers(HttpMethod.POST, "/transaction/deposit").authenticated();
                     request.anyRequest().denyAll();
                 })
                 .addFilterBefore(tokenFilter, BasicAuthenticationFilter.class)

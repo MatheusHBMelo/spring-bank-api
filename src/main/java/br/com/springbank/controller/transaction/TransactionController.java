@@ -1,5 +1,6 @@
 package br.com.springbank.controller.transaction;
 
+import br.com.springbank.controller.transaction.dto.DepositRequestDto;
 import br.com.springbank.controller.transaction.dto.TransferRequestDto;
 import br.com.springbank.service.transaction.TransactionService;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,12 @@ public class TransactionController {
     @PostMapping(path = "/transfer")
     public ResponseEntity<Void> transfer(@RequestBody TransferRequestDto transferRequestDto){
         this.transactionService.transfer(transferRequestDto);
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+    @PostMapping(path = "/deposit")
+    public ResponseEntity<Void> transfer(@RequestBody DepositRequestDto depositRequestDto){
+        this.transactionService.deposit(depositRequestDto);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 }

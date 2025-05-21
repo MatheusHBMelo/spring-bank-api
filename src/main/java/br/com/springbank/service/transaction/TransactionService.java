@@ -2,6 +2,7 @@ package br.com.springbank.service.transaction;
 
 import br.com.springbank.controller.transaction.dto.DepositRequestDto;
 import br.com.springbank.controller.transaction.dto.TransferRequestDto;
+import br.com.springbank.controller.transaction.dto.WithdrawRequestDto;
 import br.com.springbank.domain.entities.account.AccountEntity;
 import br.com.springbank.domain.entities.account.TransactionEntity;
 import br.com.springbank.domain.entities.user.UserEntity;
@@ -92,6 +93,39 @@ public class TransactionService {
         TransactionEntity transaction = TransactionEntity.builder()
                 .type(TransactionType.DEPOSIT)
                 .amount(depositRequestDto.amount())
+                .sourceAccount(userAccount)
+                .destinationAccount(null)
+                .build();
+
+        this.transactionRepository.save(transaction);
+    }
+
+    public void withdraw(WithdrawRequestDto withdrawRequestDto) {
+        String token = request.getHeader("AUTHORIZATION").substring(7);
+        DecodedJWT decodedJWT = this.tokenService.recoveryToken(token);
+        String username = this.tokenService.extractUsername(decodedJWT);
+
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        AccountEntity userAccount = accountRepository.findByUserEntity(user)
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+
+        if (withdrawRequestDto.amount() == null || withdrawRequestDto.amount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("O valor do saque deve ser no minimo R$0.01");
+        }
+
+        if (userAccount.getBalance().compareTo(withdrawRequestDto.amount()) <= 0) {
+            throw new RuntimeException("Saldo insuficiente para saque");
+        }
+
+        userAccount.setBalance(userAccount.getBalance().subtract(withdrawRequestDto.amount()));
+
+        this.accountRepository.save(userAccount);
+
+        TransactionEntity transaction = TransactionEntity.builder()
+                .type(TransactionType.WITHDRAW)
+                .amount(withdrawRequestDto.amount())
                 .sourceAccount(userAccount)
                 .destinationAccount(null)
                 .build();

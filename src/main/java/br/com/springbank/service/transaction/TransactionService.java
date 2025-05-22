@@ -1,6 +1,7 @@
 package br.com.springbank.service.transaction;
 
 import br.com.springbank.controller.transaction.dto.DepositRequestDto;
+import br.com.springbank.controller.transaction.dto.StatementResponseDto;
 import br.com.springbank.controller.transaction.dto.TransferRequestDto;
 import br.com.springbank.controller.transaction.dto.WithdrawRequestDto;
 import br.com.springbank.domain.entities.account.AccountEntity;
@@ -16,6 +17,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class TransactionService {
@@ -131,5 +133,23 @@ public class TransactionService {
                 .build();
 
         this.transactionRepository.save(transaction);
+    }
+
+    public List<StatementResponseDto> bankStatement() {
+        String token = request.getHeader("AUTHORIZATION").substring(7);
+        DecodedJWT decodedJWT = this.tokenService.recoveryToken(token);
+        String username = this.tokenService.extractUsername(decodedJWT);
+
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        AccountEntity userAccount = accountRepository.findByUserEntity(user)
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+
+        List<TransactionEntity> transactions = this.transactionRepository.findAllByAccountId(userAccount.getId());
+
+        return transactions.stream()
+                .map(StatementResponseDto::fromEntity)
+                .toList();
     }
 }

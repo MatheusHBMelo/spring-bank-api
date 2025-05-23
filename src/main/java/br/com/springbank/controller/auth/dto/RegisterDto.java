@@ -1,4 +1,7 @@
 package br.com.springbank.controller.auth.dto;
 
-public record RegisterDto(String username, String password) {
+import jakarta.validation.constraints.NotBlank;
+
+public record RegisterDto(@NotBlank(message = "O username não pode estar em branco") String username,
+                          @NotBlank(message = "O password não pode estar em branco") String password) {
 }

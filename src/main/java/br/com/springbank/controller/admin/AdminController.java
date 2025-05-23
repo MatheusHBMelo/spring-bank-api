@@ -1,10 +1,13 @@
 package br.com.springbank.controller.admin;
 
+import br.com.springbank.controller.admin.dto.UserRequestDto;
 import br.com.springbank.controller.admin.dto.UsersResponseDto;
 import br.com.springbank.service.admin.AdminService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,5 +25,10 @@ public class AdminController {
     @GetMapping(path = "/users")
     public ResponseEntity<List<UsersResponseDto>> findAllUsers() {
         return ResponseEntity.status(HttpStatus.OK).body(this.adminService.findAllUsers());
+    }
+
+    @GetMapping(path = "/user")
+    public ResponseEntity<UsersResponseDto> findUserByUsername(@RequestBody @Valid UserRequestDto userRequestDto) {
+        return ResponseEntity.status(HttpStatus.OK).body(this.adminService.findUserByUsername(userRequestDto));
     }
 }

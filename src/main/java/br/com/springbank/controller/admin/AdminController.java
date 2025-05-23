@@ -1,5 +1,6 @@
 package br.com.springbank.controller.admin;
 
+import br.com.springbank.controller.admin.dto.TransactionsResponseDto;
 import br.com.springbank.controller.admin.dto.UserRequestDto;
 import br.com.springbank.controller.admin.dto.UsersResponseDto;
 import br.com.springbank.service.admin.AdminService;
@@ -32,5 +33,10 @@ public class AdminController {
     @PatchMapping(path = "/user")
     public ResponseEntity<UsersResponseDto> disableUserByUsername(@RequestBody @Valid UserRequestDto userRequestDto) {
         return ResponseEntity.status(HttpStatus.OK).body(this.adminService.disableUser(userRequestDto));
+    }
+
+    @GetMapping(path = "/transactions")
+    public ResponseEntity<List<TransactionsResponseDto>> findAllTransactions() {
+        return ResponseEntity.status(HttpStatus.OK).body(this.adminService.findAllTransactions());
     }
 }

@@ -47,6 +47,7 @@ public class SecurityConfiguration {
                     request.requestMatchers(HttpMethod.POST, "/transaction/deposit").authenticated();
                     request.requestMatchers(HttpMethod.POST, "/transaction/withdraw").authenticated();
                     request.requestMatchers(HttpMethod.GET, "/transaction/statement").authenticated();
+                    request.requestMatchers(HttpMethod.GET, "/admin/users").hasAuthority("ROLE_ADMIN");
                     request.anyRequest().denyAll();
                 })
                 .addFilterBefore(tokenFilter, BasicAuthenticationFilter.class)

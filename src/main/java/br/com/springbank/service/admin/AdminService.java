@@ -2,10 +2,12 @@ package br.com.springbank.service.admin;
 
 import br.com.springbank.controller.admin.dto.UserRequestDto;
 import br.com.springbank.controller.admin.dto.UsersResponseDto;
+import br.com.springbank.domain.entities.user.StatusEnum;
 import br.com.springbank.domain.entities.user.UserEntity;
 import br.com.springbank.domain.repositories.account.AccountRepository;
 import br.com.springbank.domain.repositories.account.TransactionRepository;
 import br.com.springbank.domain.repositories.user.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,6 +32,16 @@ public class AdminService {
 
     public UsersResponseDto findUserByUsername(UserRequestDto userRequestDto) {
         UserEntity user = this.userRepository.findByUsername(userRequestDto.username()).orElseThrow(() -> new RuntimeException("Usuario não encontrado"));
+
+        return UsersResponseDto.fromUserEntity(user);
+    }
+
+    @Transactional
+    public UsersResponseDto disableUser(UserRequestDto userRequestDto){
+        UserEntity user = this.userRepository.findByUsername(userRequestDto.username()).orElseThrow(() -> new RuntimeException("Usuario não encontrado"));
+        user.setStatus(StatusEnum.INACTIVE);
+
+        this.userRepository.save(user);
 
         return UsersResponseDto.fromUserEntity(user);
     }

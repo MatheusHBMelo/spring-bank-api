@@ -13,6 +13,7 @@ import br.com.springbank.domain.repositories.user.RoleRepository;
 import br.com.springbank.domain.repositories.user.UserRepository;
 import br.com.springbank.service.token.TokenService;
 import br.com.springbank.utils.AccountNumberGenerator;
+import jakarta.transaction.Transactional;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -68,6 +69,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return new User(usercreated.getUsername(), usercreated.getPassword(), authorities);
     }
 
+    @Transactional
     public void registerUser(RegisterDto registerDto){
         String username = registerDto.username();
         String password = registerDto.password();

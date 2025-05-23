@@ -51,6 +51,7 @@ public class SecurityConfiguration {
                     request.requestMatchers(HttpMethod.GET, "/admin/user").hasAuthority("ROLE_ADMIN");
                     request.requestMatchers(HttpMethod.PATCH, "/admin/user").hasAuthority("ROLE_ADMIN");
                     request.requestMatchers(HttpMethod.GET, "/admin/transactions").hasAuthority("ROLE_ADMIN");
+                    request.requestMatchers(HttpMethod.GET, "/admin/accounts").hasAuthority("ROLE_ADMIN");
                     request.anyRequest().denyAll();
                 })
                 .addFilterBefore(tokenFilter, BasicAuthenticationFilter.class)

@@ -1,7 +1,9 @@
 package br.com.springbank.service.admin;
 
+import br.com.springbank.controller.admin.dto.TransactionsResponseDto;
 import br.com.springbank.controller.admin.dto.UserRequestDto;
 import br.com.springbank.controller.admin.dto.UsersResponseDto;
+import br.com.springbank.domain.entities.account.TransactionEntity;
 import br.com.springbank.domain.entities.user.StatusEnum;
 import br.com.springbank.domain.entities.user.UserEntity;
 import br.com.springbank.domain.repositories.account.AccountRepository;
@@ -44,5 +46,11 @@ public class AdminService {
         this.userRepository.save(user);
 
         return UsersResponseDto.fromUserEntity(user);
+    }
+
+    public List<TransactionsResponseDto> findAllTransactions() {
+        List<TransactionEntity> transactions = this.transactionRepository.findAll();
+
+        return transactions.stream().map(TransactionsResponseDto::fromTransactionEntity).toList();
     }
 }

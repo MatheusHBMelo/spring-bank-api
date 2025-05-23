@@ -6,10 +6,7 @@ import br.com.springbank.service.admin.AdminService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -30,5 +27,10 @@ public class AdminController {
     @GetMapping(path = "/user")
     public ResponseEntity<UsersResponseDto> findUserByUsername(@RequestBody @Valid UserRequestDto userRequestDto) {
         return ResponseEntity.status(HttpStatus.OK).body(this.adminService.findUserByUsername(userRequestDto));
+    }
+
+    @PatchMapping(path = "/user")
+    public ResponseEntity<UsersResponseDto> disableUserByUsername(@RequestBody @Valid UserRequestDto userRequestDto) {
+        return ResponseEntity.status(HttpStatus.OK).body(this.adminService.disableUser(userRequestDto));
     }
 }

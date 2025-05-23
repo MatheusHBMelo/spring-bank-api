@@ -4,6 +4,7 @@ import br.com.springbank.controller.auth.dto.LoginDto;
 import br.com.springbank.controller.auth.dto.LoginResponseDto;
 import br.com.springbank.controller.auth.dto.RegisterDto;
 import br.com.springbank.service.user.UserDetailsServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,13 +22,13 @@ public class AuthController {
     }
 
     @PostMapping(path = "/register")
-    public ResponseEntity<Void> register(@RequestBody RegisterDto registerDto) {
+    public ResponseEntity<Void> register(@RequestBody @Valid RegisterDto registerDto) {
         this.userDetailsService.registerUser(registerDto);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping(path = "/login")
-    public ResponseEntity<LoginResponseDto> register(@RequestBody LoginDto loginDto) {
+    public ResponseEntity<LoginResponseDto> register(@RequestBody @Valid LoginDto loginDto) {
         return ResponseEntity.status(HttpStatus.OK).body(this.userDetailsService.loginUser(loginDto));
     }
 }

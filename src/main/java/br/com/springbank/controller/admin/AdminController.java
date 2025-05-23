@@ -1,9 +1,6 @@
 package br.com.springbank.controller.admin;
 
-import br.com.springbank.controller.admin.dto.AccountResponseDto;
-import br.com.springbank.controller.admin.dto.TransactionsResponseDto;
-import br.com.springbank.controller.admin.dto.UserRequestDto;
-import br.com.springbank.controller.admin.dto.UsersResponseDto;
+import br.com.springbank.controller.admin.dto.*;
 import br.com.springbank.service.admin.AdminService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -44,5 +41,10 @@ public class AdminController {
     @GetMapping(path = "/accounts")
     public ResponseEntity<List<AccountResponseDto>> findAllAccounts() {
         return ResponseEntity.status(HttpStatus.OK).body(this.adminService.findAllAccounts());
+    }
+
+    @GetMapping(path = "/account")
+    public ResponseEntity<AccountResponseDto> findAccountByNumber(@RequestBody @Valid NumberAccountRequestDto numberAccountRequestDto) {
+        return ResponseEntity.status(HttpStatus.OK).body(this.adminService.findAccountByAccountNumber(numberAccountRequestDto));
     }
 }

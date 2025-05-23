@@ -14,6 +14,7 @@ import br.com.springbank.domain.repositories.user.UserRepository;
 import br.com.springbank.service.token.TokenService;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -35,6 +36,7 @@ public class TransactionService {
         this.userRepository = userRepository;
     }
 
+    @Transactional
     public void transfer(TransferRequestDto transferRequestDto) {
         String token = request.getHeader("AUTHORIZATION").substring(7);
         DecodedJWT decodedJWT = this.tokenService.recoveryToken(token);
@@ -73,6 +75,7 @@ public class TransactionService {
         this.transactionRepository.save(transaction);
     }
 
+    @Transactional
     public void deposit(DepositRequestDto depositRequestDto) {
         String token = request.getHeader("AUTHORIZATION").substring(7);
         DecodedJWT decodedJWT = this.tokenService.recoveryToken(token);
@@ -102,6 +105,7 @@ public class TransactionService {
         this.transactionRepository.save(transaction);
     }
 
+    @Transactional
     public void withdraw(WithdrawRequestDto withdrawRequestDto) {
         String token = request.getHeader("AUTHORIZATION").substring(7);
         DecodedJWT decodedJWT = this.tokenService.recoveryToken(token);

@@ -1,9 +1,6 @@
 package br.com.springbank.service.admin;
 
-import br.com.springbank.controller.admin.dto.AccountResponseDto;
-import br.com.springbank.controller.admin.dto.TransactionsResponseDto;
-import br.com.springbank.controller.admin.dto.UserRequestDto;
-import br.com.springbank.controller.admin.dto.UsersResponseDto;
+import br.com.springbank.controller.admin.dto.*;
 import br.com.springbank.domain.entities.account.AccountEntity;
 import br.com.springbank.domain.entities.account.TransactionEntity;
 import br.com.springbank.domain.entities.user.StatusEnum;
@@ -60,5 +57,12 @@ public class AdminService {
         List<AccountEntity> accounts = this.accountRepository.findAll();
 
         return accounts.stream().map(AccountResponseDto::fromAccountEntity).toList();
+    }
+
+    public AccountResponseDto findAccountByAccountNumber(NumberAccountRequestDto numberAccountRequestDto) {
+        AccountEntity account = this.accountRepository.findByAccountNumber(numberAccountRequestDto.accountNumber())
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+
+        return AccountResponseDto.fromAccountEntity(account);
     }
 }

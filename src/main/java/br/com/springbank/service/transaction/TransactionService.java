@@ -11,6 +11,7 @@ import br.com.springbank.domain.enums.TransactionType;
 import br.com.springbank.domain.repositories.account.AccountRepository;
 import br.com.springbank.domain.repositories.account.TransactionRepository;
 import br.com.springbank.domain.repositories.user.UserRepository;
+import br.com.springbank.service.email.EmailService;
 import br.com.springbank.service.token.TokenService;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,13 +28,17 @@ public class TransactionService {
     private final TokenService tokenService;
     private final HttpServletRequest request;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
-    public TransactionService(TransactionRepository transactionRepository, AccountRepository accountRepository, TokenService tokenService, HttpServletRequest request, UserRepository userRepository) {
+    public TransactionService(TransactionRepository transactionRepository, AccountRepository accountRepository,
+                              TokenService tokenService, HttpServletRequest request, UserRepository userRepository,
+                              EmailService emailService) {
         this.transactionRepository = transactionRepository;
         this.accountRepository = accountRepository;
         this.tokenService = tokenService;
         this.request = request;
         this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -73,6 +78,8 @@ public class TransactionService {
                 .build();
 
         this.transactionRepository.save(transaction);
+
+        this.emailService.sendEmail(senderUser.getEmail(), "Transferência feita com sucesso", "A sua transferência de R$" + transferRequestDto.amount() + " para " + receiverAccount.getAccountNumber() + " foi feita com sucesso.");
     }
 
     @Transactional
@@ -103,6 +110,8 @@ public class TransactionService {
                 .build();
 
         this.transactionRepository.save(transaction);
+
+        this.emailService.sendEmail(user.getEmail(), "Deposito feito com sucesso", "O deposito no valor de R$" + depositRequestDto.amount() + " foi feito com sucesso.");
     }
 
     @Transactional
@@ -137,6 +146,8 @@ public class TransactionService {
                 .build();
 
         this.transactionRepository.save(transaction);
+
+        this.emailService.sendEmail(user.getEmail(), "Saque feito com sucesso", "O saque no valor de R$" + withdrawRequestDto.amount() + " foi feito com sucesso.");
     }
 
     public List<StatementResponseDto> bankStatement() {

@@ -11,6 +11,7 @@ import br.com.springbank.domain.entities.user.UserEntity;
 import br.com.springbank.domain.repositories.account.AccountRepository;
 import br.com.springbank.domain.repositories.user.RoleRepository;
 import br.com.springbank.domain.repositories.user.UserRepository;
+import br.com.springbank.service.email.EmailService;
 import br.com.springbank.service.token.TokenService;
 import br.com.springbank.utils.AccountNumberGenerator;
 import jakarta.transaction.Transactional;
@@ -39,15 +40,18 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private final TokenService tokenService;
     private final AccountRepository accountRepository;
     private final AccountNumberGenerator accountNumberGenerator;
+    private final EmailService emailService;
 
     public UserDetailsServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder,
-                                  TokenService tokenService, AccountRepository accountRepository, AccountNumberGenerator accountNumberGenerator) {
+                                  TokenService tokenService, AccountRepository accountRepository, AccountNumberGenerator accountNumberGenerator,
+                                  EmailService emailService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
         this.accountRepository = accountRepository;
         this.accountNumberGenerator = accountNumberGenerator;
+        this.emailService = emailService;
     }
 
     @Override
@@ -73,6 +77,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public void registerUser(RegisterDto registerDto){
         String username = registerDto.username();
         String password = registerDto.password();
+        String email = registerDto.email();
 
         RoleEntity role = this.roleRepository.findByName(RoleEnum.USER)
                 .orElseThrow(() -> new RuntimeException("Essa role não existe no sistema"));
@@ -80,6 +85,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         UserEntity newUser = UserEntity.builder()
                 .username(username)
                 .password(passwordEncoder.encode(password))
+                .email(email)
                 .role(Set.of(role))
                 .status(StatusEnum.ACTIVE)
                 .createdAt(LocalDateTime.now())
@@ -95,6 +101,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .build();
 
         this.accountRepository.save(newAccount);
+
+        this.emailService.sendEmail(email, "Confirmação de conta", "Confirmamos que sua conta foi criada com sucesso no sistema, Sr." + username);
     }
 
     public LoginResponseDto loginUser(LoginDto loginDto) {

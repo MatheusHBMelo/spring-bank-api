@@ -21,10 +21,10 @@ public class AccountEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, updatable = false)
+    @Column(name = "accountnumber", nullable = false, unique = true, updatable = false)
     private String accountNumber;
 
-    @Column(nullable = false)
+    @Column(name = "agencynumber", nullable = false)
     private String agencyNumber;
 
     @Column(precision = 19, scale = 2, nullable = false)

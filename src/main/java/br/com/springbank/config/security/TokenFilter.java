@@ -27,23 +27,27 @@ public class TokenFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String token = request.getHeader("AUTHORIZATION");
+        String header = request.getHeader("Authorization");
 
-        if (token != null) {
-            token = token.substring(7);
+        if (header != null && header.startsWith("Bearer ")) {
+            String token = header.substring(7);
 
-            DecodedJWT decodedJWT = this.tokenService.recoveryToken(token);
-
-            String username = decodedJWT.getSubject();
-            String authoritiesName = this.tokenService.extractClaimByName(decodedJWT, "authorities").asString();
-
-            Collection<? extends GrantedAuthority> authorities = AuthorityUtils.commaSeparatedStringToAuthorityList(authoritiesName);
-
-            Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            authenticateClient(token);
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void authenticateClient(String token) {
+        DecodedJWT decodedJWT = this.tokenService.recoveryToken(token);
+
+        String username = decodedJWT.getSubject();
+        String authoritiesName = this.tokenService.extractClaimByName(decodedJWT, "authorities").asString();
+
+        Collection<? extends GrantedAuthority> authorities = AuthorityUtils.commaSeparatedStringToAuthorityList(authoritiesName);
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

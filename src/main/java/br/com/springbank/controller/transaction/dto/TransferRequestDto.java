@@ -10,5 +10,5 @@ import java.math.BigDecimal;
 public record TransferRequestDto(@NotNull(message = "O campo amount não pode ser nulo")
                                  @DecimalMin(value = "0.00", inclusive = false, message = "O campo amount deve ser maior que 0.00")
                                  @Digits(integer = 19, fraction = 2) BigDecimal amount,
-                                 @NotBlank(message = "O campo do destinatario de transferencia não pode estar em branco") String receiverAccountNumber) {
+                                 @NotBlank(message = "O campo do destinatário de transferencia não pode estar em branco") String receiverAccountNumber) {
 }

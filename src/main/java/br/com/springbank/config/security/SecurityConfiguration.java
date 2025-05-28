@@ -11,19 +11,12 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -37,24 +30,17 @@ public class SecurityConfiguration {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(request -> {
-                    request.requestMatchers(HttpMethod.POST, "/auth/register").permitAll();
-                    request.requestMatchers(HttpMethod.POST, "/auth/login").permitAll();
-                    request.requestMatchers(HttpMethod.POST, "/transaction/transfer").authenticated();
-                    request.requestMatchers(HttpMethod.POST, "/transaction/deposit").authenticated();
-                    request.requestMatchers(HttpMethod.POST, "/transaction/withdraw").authenticated();
-                    request.requestMatchers(HttpMethod.GET, "/transaction/statement").authenticated();
-                    request.requestMatchers(HttpMethod.GET, "/admin/users").hasAuthority("ROLE_ADMIN");
-                    request.requestMatchers(HttpMethod.GET, "/admin/user").hasAuthority("ROLE_ADMIN");
-                    request.requestMatchers(HttpMethod.PATCH, "/admin/user").hasAuthority("ROLE_ADMIN");
-                    request.requestMatchers(HttpMethod.GET, "/admin/transactions").hasAuthority("ROLE_ADMIN");
-                    request.requestMatchers(HttpMethod.GET, "/admin/accounts").hasAuthority("ROLE_ADMIN");
-                    request.requestMatchers(HttpMethod.GET, "/admin/account").hasAuthority("ROLE_ADMIN");
-                    request.anyRequest().denyAll();
-                })
+                .authorizeHttpRequests(request -> request
+                        .requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/transaction/transfer", "/transaction/deposit", "/transaction/withdraw").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/transaction/statement").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/admin/users", "/admin/user", "/admin/transactions", "/admin/accounts", "/admin/account").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/admin/user").hasRole("ADMIN")
+                        .anyRequest().denyAll()
+                )
                 .addFilterBefore(tokenFilter, BasicAuthenticationFilter.class)
                 .build();
     }

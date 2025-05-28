@@ -1,8 +1,9 @@
 package br.com.springbank.controller.admin;
 
-import br.com.springbank.controller.admin.dto.*;
+import br.com.springbank.controller.admin.dto.AccountResponseDto;
+import br.com.springbank.controller.admin.dto.TransactionsResponseDto;
+import br.com.springbank.controller.admin.dto.UsersResponseDto;
 import br.com.springbank.service.admin.AdminService;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,13 +25,13 @@ public class AdminController {
     }
 
     @GetMapping(path = "/user")
-    public ResponseEntity<UsersResponseDto> findUserByUsername(@RequestBody @Valid UserRequestDto userRequestDto) {
-        return ResponseEntity.status(HttpStatus.OK).body(this.adminService.findUserByUsername(userRequestDto));
+    public ResponseEntity<UsersResponseDto> findUserByUsername(@RequestParam("username") String username) {
+        return ResponseEntity.ok(this.adminService.findUserByUsername(username));
     }
 
     @PatchMapping(path = "/user")
-    public ResponseEntity<UsersResponseDto> disableUserByUsername(@RequestBody @Valid UserRequestDto userRequestDto) {
-        return ResponseEntity.status(HttpStatus.OK).body(this.adminService.disableUser(userRequestDto));
+    public ResponseEntity<UsersResponseDto> disableUserByUsername(@RequestParam("username") String username) {
+        return ResponseEntity.ok(this.adminService.disableUser(username));
     }
 
     @GetMapping(path = "/transactions")
@@ -44,7 +45,7 @@ public class AdminController {
     }
 
     @GetMapping(path = "/account")
-    public ResponseEntity<AccountResponseDto> findAccountByNumber(@RequestBody @Valid NumberAccountRequestDto numberAccountRequestDto) {
-        return ResponseEntity.status(HttpStatus.OK).body(this.adminService.findAccountByAccountNumber(numberAccountRequestDto));
+    public ResponseEntity<AccountResponseDto> findAccountByNumber(@RequestParam("numberAccount") String numberAccount) {
+        return ResponseEntity.ok(this.adminService.findAccountByAccountNumber(numberAccount));
     }
 }

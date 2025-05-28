@@ -28,7 +28,7 @@ public class TransactionController {
     }
 
     @PostMapping(path = "/deposit")
-    public ResponseEntity<Void> transfer(@RequestBody @Valid DepositRequestDto depositRequestDto) {
+    public ResponseEntity<Void> deposit(@RequestBody @Valid DepositRequestDto depositRequestDto) {
         this.transactionService.deposit(depositRequestDto);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
@@ -40,7 +40,7 @@ public class TransactionController {
     }
 
     @GetMapping(path = "/statement")
-    public ResponseEntity<List<StatementResponseDto>> bankStatement() {
-        return ResponseEntity.status(HttpStatus.OK).body(this.transactionService.bankStatement());
+    public ResponseEntity<List<StatementResponseDto>> statement() {
+        return ResponseEntity.ok(this.transactionService.bankStatement());
     }
 }

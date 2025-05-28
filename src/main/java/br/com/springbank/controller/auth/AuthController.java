@@ -3,7 +3,8 @@ package br.com.springbank.controller.auth;
 import br.com.springbank.controller.auth.dto.LoginDto;
 import br.com.springbank.controller.auth.dto.LoginResponseDto;
 import br.com.springbank.controller.auth.dto.RegisterDto;
-import br.com.springbank.service.user.UserDetailsServiceImpl;
+import br.com.springbank.service.user.AuthenticationService;
+import br.com.springbank.service.user.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,20 +16,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(path = "/auth")
 public class AuthController {
-    private final UserDetailsServiceImpl userDetailsService;
+    private final UserService userService;
+    private final AuthenticationService authenticationService;
 
-    public AuthController(UserDetailsServiceImpl userDetailsService) {
-        this.userDetailsService = userDetailsService;
+    public AuthController(UserService userService, AuthenticationService authenticationService) {
+        this.userService = userService;
+        this.authenticationService = authenticationService;
     }
 
     @PostMapping(path = "/register")
     public ResponseEntity<Void> register(@RequestBody @Valid RegisterDto registerDto) {
-        this.userDetailsService.registerUser(registerDto);
+        this.userService.registerUser(registerDto);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping(path = "/login")
-    public ResponseEntity<LoginResponseDto> register(@RequestBody @Valid LoginDto loginDto) {
-        return ResponseEntity.status(HttpStatus.OK).body(this.userDetailsService.loginUser(loginDto));
+    public ResponseEntity<LoginResponseDto> login(@RequestBody @Valid LoginDto loginDto) {
+        return ResponseEntity.ok(this.authenticationService.loginUser(loginDto));
     }
 }

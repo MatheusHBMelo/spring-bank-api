@@ -6,10 +6,13 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.JWTVerifier;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -18,14 +21,22 @@ import java.util.stream.Collectors;
 
 @Service
 public class TokenService {
+    public static final int EXPIRATION_MINUTES = 30;
+    private static final ZoneOffset ZONE_OFFSET = ZoneOffset.of("-03:00");
+
     @Value("${spring.app.security.secret}")
     private String secret;
     @Value("${spring.app.security.issuer}")
     private String issuer;
 
-    public String createToken(Authentication authentication) {
-        Algorithm algorithm = Algorithm.HMAC256(this.secret);
+    private Algorithm algorithm;
 
+    @PostConstruct
+    public void init() {
+        algorithm = Algorithm.HMAC256(this.secret);
+    }
+
+    public String createToken(Authentication authentication) {
         String username = authentication.getName();
         String authorities = authentication.getAuthorities()
                 .stream()
@@ -36,28 +47,28 @@ public class TokenService {
                 .withIssuer(this.issuer)
                 .withSubject(username)
                 .withClaim("authorities", authorities)
-                .withIssuedAt(LocalDateTime.now().toInstant(ZoneOffset.of("-03:00")))
-                .withExpiresAt(LocalDateTime.now().plusMinutes(5).toInstant(ZoneOffset.of("-03:00")))
+                .withIssuedAt(LocalDateTime.now().toInstant(ZONE_OFFSET))
+                .withExpiresAt(LocalDateTime.now().plusMinutes(EXPIRATION_MINUTES).toInstant(ZONE_OFFSET))
                 .withJWTId(UUID.randomUUID().toString())
-                .withNotBefore(LocalDateTime.now().toInstant(ZoneOffset.of("-03:00")))
-                .sign(algorithm);
+                .withNotBefore(LocalDateTime.now().toInstant(ZONE_OFFSET))
+                .sign(this.algorithm);
     }
 
     public DecodedJWT recoveryToken(String token) {
         try {
-            Algorithm algorithm = Algorithm.HMAC256(this.secret);
+            JWTVerifier jwtVerifier = JWT.require(this.algorithm).withIssuer(this.issuer).build();
 
-            JWTVerifier jwtVerifier = JWT.require(algorithm).withIssuer(this.issuer).build();
-            DecodedJWT decodedJWT = jwtVerifier.verify(token);
-
-            return decodedJWT;
+            return jwtVerifier.verify(token);
         } catch (JWTVerificationException ex) {
-            throw new JWTVerificationException("Esse token não está valido -  Não autorizado.");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token inválido ou expirado.");
         }
     }
 
     public String extractUsername(DecodedJWT decodedJWT) {
-        return decodedJWT.getSubject().toString();
+        if (decodedJWT == null || decodedJWT.getSubject() == null) {
+            throw new IllegalArgumentException("Token inválido: subject ausente.");
+        }
+        return decodedJWT.getSubject();
     }
 
     public Claim extractClaimByName(DecodedJWT decodedJWT, String claimName) {

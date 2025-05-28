@@ -8,14 +8,16 @@ import br.com.springbank.domain.entities.account.AccountEntity;
 import br.com.springbank.domain.entities.account.TransactionEntity;
 import br.com.springbank.domain.entities.user.UserEntity;
 import br.com.springbank.domain.enums.TransactionType;
-import br.com.springbank.domain.repositories.account.AccountRepository;
 import br.com.springbank.domain.repositories.account.TransactionRepository;
-import br.com.springbank.domain.repositories.user.UserRepository;
-import br.com.springbank.service.email.EmailService;
-import br.com.springbank.service.token.TokenService;
-import com.auth0.jwt.interfaces.DecodedJWT;
+import br.com.springbank.event.DepositCompletedEvent;
+import br.com.springbank.event.TransferCompletedEvent;
+import br.com.springbank.event.WithdrawCompletedEvent;
+import br.com.springbank.service.account.AccountService;
+import br.com.springbank.service.user.UserService;
+import br.com.springbank.validator.TransactionValidator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -24,147 +26,93 @@ import java.util.List;
 @Service
 public class TransactionService {
     private final TransactionRepository transactionRepository;
-    private final AccountRepository accountRepository;
-    private final TokenService tokenService;
     private final HttpServletRequest request;
-    private final UserRepository userRepository;
-    private final EmailService emailService;
+    private final UserService userService;
+    private final AccountService accountService;
+    private final TransactionValidator transactionValidator;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public TransactionService(TransactionRepository transactionRepository, AccountRepository accountRepository,
-                              TokenService tokenService, HttpServletRequest request, UserRepository userRepository,
-                              EmailService emailService) {
+    public TransactionService(TransactionRepository transactionRepository,
+                              HttpServletRequest request, UserService userService, AccountService accountService,
+                              TransactionValidator transactionValidator, ApplicationEventPublisher eventPublisher) {
         this.transactionRepository = transactionRepository;
-        this.accountRepository = accountRepository;
-        this.tokenService = tokenService;
         this.request = request;
-        this.userRepository = userRepository;
-        this.emailService = emailService;
+        this.userService = userService;
+        this.accountService = accountService;
+        this.transactionValidator = transactionValidator;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
     public void transfer(TransferRequestDto transferRequestDto) {
-        String token = request.getHeader("AUTHORIZATION").substring(7);
-        DecodedJWT decodedJWT = this.tokenService.recoveryToken(token);
-        String username = this.tokenService.extractUsername(decodedJWT);
+        UserEntity senderUser = this.userService.getAuthenticatedUser(this.request);
 
-        UserEntity senderUser = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuário remetente não encontrado"));
+        AccountEntity senderAccount = this.accountService.getUserAccount(senderUser);
 
-        AccountEntity senderAccount = accountRepository.findByUserEntity(senderUser)
-                .orElseThrow(() -> new RuntimeException("Conta do remetente não encontrada"));
+        AccountEntity receiverAccount = this.accountService.getUserAccountByAccountNumber(transferRequestDto.receiverAccountNumber());
 
-        AccountEntity receiverAccount = this.accountRepository.findByAccountNumber(transferRequestDto.receiverAccountNumber())
-                .orElseThrow(() -> new RuntimeException("Não existe conta com esse nome"));
+        this.transactionValidator.validatePositiveAmount(transferRequestDto.amount(), "Transferência");
+        this.transactionValidator.validateSufficientBalance(senderAccount.getBalance(), transferRequestDto.amount(), "Transferência");
 
-        if (transferRequestDto.amount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("O valor da transferencia deve ser no minimo R$0.01");
-        }
+        this.accountService.subtractBalance(senderAccount, transferRequestDto.amount());
+        this.accountService.addBalance(receiverAccount, transferRequestDto.amount());
 
-        if (senderAccount.getBalance().compareTo(transferRequestDto.amount()) < 0) {
-            throw new RuntimeException("Saldo insuficiente");
-        }
+        this.createTransaction(senderAccount, receiverAccount, transferRequestDto.amount(), TransactionType.TRANSFER);
 
-        senderAccount.setBalance(senderAccount.getBalance().subtract(transferRequestDto.amount()));
-        receiverAccount.setBalance(receiverAccount.getBalance().add(transferRequestDto.amount()));
-
-        this.accountRepository.save(senderAccount);
-        this.accountRepository.save(receiverAccount);
-
-        TransactionEntity transaction = TransactionEntity.builder()
-                .type(TransactionType.TRANSFER)
-                .amount(transferRequestDto.amount())
-                .sourceAccount(senderAccount)
-                .destinationAccount(receiverAccount)
-                .build();
-
-        this.transactionRepository.save(transaction);
-
-        this.emailService.sendEmail(senderUser.getEmail(), "Transferência feita com sucesso", "A sua transferência de R$" + transferRequestDto.amount() + " para " + receiverAccount.getAccountNumber() + " foi feita com sucesso.");
+        this.eventPublisher.publishEvent(new TransferCompletedEvent(senderUser, transferRequestDto.amount(), receiverAccount.getAccountNumber()));
     }
 
     @Transactional
     public void deposit(DepositRequestDto depositRequestDto) {
-        String token = request.getHeader("AUTHORIZATION").substring(7);
-        DecodedJWT decodedJWT = this.tokenService.recoveryToken(token);
-        String username = this.tokenService.extractUsername(decodedJWT);
+        UserEntity user = this.userService.getAuthenticatedUser(this.request);
 
-        UserEntity user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        AccountEntity userAccount = this.accountService.getUserAccount(user);
 
-        AccountEntity userAccount = accountRepository.findByUserEntity(user)
-                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+        this.transactionValidator.validatePositiveAmount(depositRequestDto.amount(), "Deposito");
 
-        if (depositRequestDto.amount() == null || depositRequestDto.amount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("O valor do deposito deve ser no minimo R$0.01");
-        }
+        this.accountService.addBalance(userAccount, depositRequestDto.amount());
 
-        userAccount.setBalance(userAccount.getBalance().add(depositRequestDto.amount()));
+        this.createTransaction(userAccount, null, depositRequestDto.amount(), TransactionType.DEPOSIT);
 
-        this.accountRepository.save(userAccount);
-
-        TransactionEntity transaction = TransactionEntity.builder()
-                .type(TransactionType.DEPOSIT)
-                .amount(depositRequestDto.amount())
-                .sourceAccount(userAccount)
-                .destinationAccount(null)
-                .build();
-
-        this.transactionRepository.save(transaction);
-
-        this.emailService.sendEmail(user.getEmail(), "Deposito feito com sucesso", "O deposito no valor de R$" + depositRequestDto.amount() + " foi feito com sucesso.");
+        this.eventPublisher.publishEvent(new DepositCompletedEvent(user, depositRequestDto.amount()));
     }
 
     @Transactional
     public void withdraw(WithdrawRequestDto withdrawRequestDto) {
-        String token = request.getHeader("AUTHORIZATION").substring(7);
-        DecodedJWT decodedJWT = this.tokenService.recoveryToken(token);
-        String username = this.tokenService.extractUsername(decodedJWT);
+        UserEntity user = this.userService.getAuthenticatedUser(this.request);
 
-        UserEntity user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        AccountEntity userAccount = this.accountService.getUserAccount(user);
 
-        AccountEntity userAccount = accountRepository.findByUserEntity(user)
-                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+        this.transactionValidator.validatePositiveAmount(withdrawRequestDto.amount(), "Saque");
+        this.transactionValidator.validateSufficientBalance(userAccount.getBalance(), withdrawRequestDto.amount(), "Saque");
 
-        if (withdrawRequestDto.amount() == null || withdrawRequestDto.amount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("O valor do saque deve ser no minimo R$0.01");
-        }
+        this.accountService.subtractBalance(userAccount, withdrawRequestDto.amount());
 
-        if (userAccount.getBalance().compareTo(withdrawRequestDto.amount()) <= 0) {
-            throw new RuntimeException("Saldo insuficiente para saque");
-        }
+        this.createTransaction(userAccount, null, withdrawRequestDto.amount(), TransactionType.WITHDRAW);
 
-        userAccount.setBalance(userAccount.getBalance().subtract(withdrawRequestDto.amount()));
-
-        this.accountRepository.save(userAccount);
-
-        TransactionEntity transaction = TransactionEntity.builder()
-                .type(TransactionType.WITHDRAW)
-                .amount(withdrawRequestDto.amount())
-                .sourceAccount(userAccount)
-                .destinationAccount(null)
-                .build();
-
-        this.transactionRepository.save(transaction);
-
-        this.emailService.sendEmail(user.getEmail(), "Saque feito com sucesso", "O saque no valor de R$" + withdrawRequestDto.amount() + " foi feito com sucesso.");
+        this.eventPublisher.publishEvent(new WithdrawCompletedEvent(user, withdrawRequestDto.amount()));
     }
 
     public List<StatementResponseDto> bankStatement() {
-        String token = request.getHeader("AUTHORIZATION").substring(7);
-        DecodedJWT decodedJWT = this.tokenService.recoveryToken(token);
-        String username = this.tokenService.extractUsername(decodedJWT);
+        UserEntity user = this.userService.getAuthenticatedUser(this.request);
 
-        UserEntity user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-
-        AccountEntity userAccount = accountRepository.findByUserEntity(user)
-                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+        AccountEntity userAccount = this.accountService.getUserAccount(user);
 
         List<TransactionEntity> transactions = this.transactionRepository.findAllByAccountId(userAccount.getId());
 
         return transactions.stream()
                 .map(StatementResponseDto::fromEntity)
                 .toList();
+    }
+
+    private void createTransaction(AccountEntity sourceAccount, AccountEntity destinationAccount, BigDecimal amount, TransactionType type) {
+        TransactionEntity transaction = TransactionEntity.builder()
+                .type(type)
+                .amount(amount)
+                .sourceAccount(sourceAccount)
+                .destinationAccount(destinationAccount)
+                .build();
+
+        transactionRepository.save(transaction);
     }
 }

@@ -9,6 +9,8 @@ import br.com.springbank.domain.repositories.user.RoleRepository;
 import br.com.springbank.domain.repositories.user.UserRepository;
 import br.com.springbank.event.RegisterCompletedEvent;
 import br.com.springbank.service.account.AccountService;
+import br.com.springbank.service.exceptions.token.InvalidOrExpiredTokenException;
+import br.com.springbank.service.exceptions.user.UserNotFoundException;
 import br.com.springbank.service.token.TokenService;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,9 +49,9 @@ public class UserService {
         String header = request.getHeader(AUTHORIZATION_HEADER);
 
         if (header == null || !header.startsWith("Bearer ")) {
-            throw new RuntimeException("Token JWT ausente ou inválido");
+            throw new InvalidOrExpiredTokenException("Token JWT ausente ou inválido");
         }
-        
+
         String token = header.substring(7);
 
         DecodedJWT decodedJWT = this.tokenService.recoveryToken(token);
@@ -57,7 +59,7 @@ public class UserService {
         String username = this.tokenService.extractUsername(decodedJWT);
 
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_MESSAGE));
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MESSAGE));
     }
 
     @Transactional

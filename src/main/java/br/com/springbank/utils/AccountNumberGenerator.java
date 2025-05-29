@@ -1,6 +1,7 @@
 package br.com.springbank.utils;
 
 import br.com.springbank.domain.repositories.account.AccountRepository;
+import br.com.springbank.service.exceptions.account.AccountNumberGenerationException;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ThreadLocalRandom;
@@ -21,6 +22,6 @@ public class AccountNumberGenerator {
                 return number;
             }
         }
-        throw new IllegalStateException("Não foi possível gerar um número de conta único após " + maxAttempts + " tentativas.");
+        throw new AccountNumberGenerationException("Não foi possível gerar um número de conta único após muitas tentativas.");
     }
 }

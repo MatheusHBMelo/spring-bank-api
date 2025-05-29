@@ -3,6 +3,8 @@ package br.com.springbank.service.account;
 import br.com.springbank.domain.entities.account.AccountEntity;
 import br.com.springbank.domain.entities.user.UserEntity;
 import br.com.springbank.domain.repositories.account.AccountRepository;
+import br.com.springbank.service.exceptions.account.AccountNotFoundException;
+import br.com.springbank.service.exceptions.account.UserAccountNotFoundException;
 import br.com.springbank.utils.AccountNumberGenerator;
 import org.springframework.stereotype.Service;
 
@@ -20,12 +22,12 @@ public class AccountService {
 
     public AccountEntity getUserAccount(UserEntity user) {
         return accountRepository.findByUserEntity(user)
-                .orElseThrow(() -> new RuntimeException("Conta não encontrada."));
+                .orElseThrow(() -> new UserAccountNotFoundException("Conta associada ao usuário não encontrada."));
     }
 
     public AccountEntity getUserAccountByAccountNumber(String accountNumber) {
         return this.accountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new RuntimeException("Não existe conta com esse número."));
+                .orElseThrow(() -> new AccountNotFoundException("Conta com número '" + accountNumber + "' não encontrada."));
     }
 
     public void subtractBalance(AccountEntity userAccount, BigDecimal amount) {

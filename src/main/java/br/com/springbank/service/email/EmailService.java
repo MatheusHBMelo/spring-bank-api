@@ -1,5 +1,9 @@
 package br.com.springbank.service.email;
 
+import br.com.springbank.service.exceptions.email.EmailMessageRequiredException;
+import br.com.springbank.service.exceptions.email.EmailRecipientRequiredException;
+import br.com.springbank.service.exceptions.email.EmailSendingException;
+import br.com.springbank.service.exceptions.email.EmailTitleRequiredException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
@@ -30,19 +34,19 @@ public class EmailService {
         try {
             javaMailSender.send(content);
         } catch (MailException e) {
-            throw new RuntimeException("Falha ao enviar e-mail.");
+            throw new EmailSendingException("Falha ao enviar e-mail: " + e.getMessage());
         }
     }
 
     private void validateFields(String recipient, String title, String message) {
         if (recipient == null || recipient.trim().isEmpty()) {
-            throw new IllegalArgumentException("Destinatário não pode ser nulo ou vazio.");
+            throw new EmailRecipientRequiredException("Destinatário do e-mail não pode ser nulo ou vazio.");
         }
         if (title == null || title.trim().isEmpty()) {
-            throw new IllegalArgumentException("Título do e-mail não pode ser nulo ou vazio.");
+            throw new EmailTitleRequiredException("Título do e-mail não pode ser nulo ou vazio.");
         }
         if (message == null || message.trim().isEmpty()) {
-            throw new IllegalArgumentException("Mensagem do e-mail não pode ser nula ou vazia.");
+            throw new EmailMessageRequiredException("Mensagem do e-mail não pode ser nula ou vazia.");
         }
     }
 }

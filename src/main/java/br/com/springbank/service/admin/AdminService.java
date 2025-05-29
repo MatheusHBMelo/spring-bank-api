@@ -10,6 +10,11 @@ import br.com.springbank.domain.entities.user.UserEntity;
 import br.com.springbank.domain.repositories.account.AccountRepository;
 import br.com.springbank.domain.repositories.account.TransactionRepository;
 import br.com.springbank.domain.repositories.user.UserRepository;
+import br.com.springbank.service.exceptions.account.AccountNotFoundException;
+import br.com.springbank.service.exceptions.account.UserAccountNotFoundException;
+import br.com.springbank.service.exceptions.user.UserAlreadyInactiveException;
+import br.com.springbank.service.exceptions.user.UserNotFoundException;
+import br.com.springbank.service.exceptions.user.UsernameRequiredException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -35,10 +40,11 @@ public class AdminService {
 
     public UsersResponseDto findUserByUsername(String username) {
         if (username == null || username.trim().isEmpty()) {
-            throw new RuntimeException("O username é obrigatório.");
+            throw new UsernameRequiredException("O nome de usuário é obrigatório.");
         }
 
-        UserEntity user = this.userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("Este usuario não foi encontrado."));
+        UserEntity user = this.userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("Usuário com nome '" + username + "' não foi encontrado."));
 
         return UsersResponseDto.fromUserEntity(user);
     }
@@ -46,13 +52,14 @@ public class AdminService {
     @Transactional
     public UsersResponseDto disableUser(String username) {
         if (username == null || username.trim().isEmpty()) {
-            throw new RuntimeException("O username é obrigatório.");
+            throw new UsernameRequiredException("O nome de usuário é obrigatório.");
         }
 
-        UserEntity user = this.userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("Este usuario não foi encontrado."));
+        UserEntity user = this.userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("Usuário com nome '" + username + "' não foi encontrado."));
 
         if (user.getStatus().equals(StatusEnum.INACTIVE)) {
-            throw new RuntimeException("Este usuário já está desativado.");
+            throw new UserAlreadyInactiveException("Este usuário já está desativado.");
         }
 
         user.setStatus(StatusEnum.INACTIVE);
@@ -76,11 +83,11 @@ public class AdminService {
 
     public AccountResponseDto findAccountByAccountNumber(String numberAccount) {
         if (numberAccount == null || numberAccount.trim().isEmpty()) {
-            throw new RuntimeException("O número da conta é obrigatório.");
+            throw new UserAccountNotFoundException("O número da conta é obrigatório.");
         }
 
         AccountEntity account = this.accountRepository.findByAccountNumber(numberAccount)
-                .orElseThrow(() -> new RuntimeException("Esta conta não foi encontrada."));
+                .orElseThrow(() -> new AccountNotFoundException("Conta com número '" + numberAccount + "' não encontrada."));
 
         return AccountResponseDto.fromAccountEntity(account);
     }

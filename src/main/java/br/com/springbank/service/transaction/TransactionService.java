@@ -14,6 +14,7 @@ import br.com.springbank.event.DepositCompletedEvent;
 import br.com.springbank.event.TransferCompletedEvent;
 import br.com.springbank.event.WithdrawCompletedEvent;
 import br.com.springbank.service.account.AccountService;
+import br.com.springbank.service.exceptions.user.InactiveUserException;
 import br.com.springbank.service.user.UserService;
 import br.com.springbank.validator.TransactionValidator;
 import jakarta.servlet.http.HttpServletRequest;
@@ -52,7 +53,7 @@ public class TransactionService {
 
         AccountEntity receiverAccount = this.accountService.getUserAccountByAccountNumber(transferRequestDto.receiverAccountNumber());
 
-        this.validateStatusAccount(receiverAccount.getUserEntity().getStatus());
+        this.validateStatusUser(receiverAccount.getUserEntity().getStatus());
 
         this.transactionValidator.validatePositiveAmount(transferRequestDto.amount(), "Transferência");
         this.transactionValidator.validateSufficientBalance(senderAccount.getBalance(), transferRequestDto.amount(), "Transferência");
@@ -71,7 +72,7 @@ public class TransactionService {
 
         AccountEntity userAccount = this.accountService.getUserAccount(user);
 
-        this.validateStatusAccount(userAccount.getUserEntity().getStatus());
+        this.validateStatusUser(userAccount.getUserEntity().getStatus());
 
         this.transactionValidator.validatePositiveAmount(depositRequestDto.amount(), "Deposito");
 
@@ -88,7 +89,7 @@ public class TransactionService {
 
         AccountEntity userAccount = this.accountService.getUserAccount(user);
 
-        this.validateStatusAccount(userAccount.getUserEntity().getStatus());
+        this.validateStatusUser(userAccount.getUserEntity().getStatus());
 
         this.transactionValidator.validatePositiveAmount(withdrawRequestDto.amount(), "Saque");
         this.transactionValidator.validateSufficientBalance(userAccount.getBalance(), withdrawRequestDto.amount(), "Saque");
@@ -123,9 +124,9 @@ public class TransactionService {
         transactionRepository.save(transaction);
     }
 
-    private void validateStatusAccount(StatusEnum status) {
+    private void validateStatusUser(StatusEnum status) {
         if (status == StatusEnum.INACTIVE) {
-            throw new RuntimeException("Você não pode fazer transação para uma conta com usuario inativo.");
+            throw new InactiveUserException("Você não pode fazer transação para uma conta com usuário inativo.");
         }
     }
 }

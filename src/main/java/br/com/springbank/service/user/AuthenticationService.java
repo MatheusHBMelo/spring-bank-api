@@ -2,6 +2,7 @@ package br.com.springbank.service.user;
 
 import br.com.springbank.controller.auth.dto.LoginDto;
 import br.com.springbank.controller.auth.dto.LoginResponseDto;
+import br.com.springbank.service.exceptions.user.InvalidCredentialsException;
 import br.com.springbank.service.token.TokenService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -37,7 +38,7 @@ public class AuthenticationService {
         UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
         if (!passwordEncoder.matches(password, userDetails.getPassword())) {
-            throw new RuntimeException("Credenciais erradas - Senha incorreta");
+            throw new InvalidCredentialsException("Credenciais erradas - Senha incorreta");
         }
 
         return new UsernamePasswordAuthenticationToken(userDetails.getUsername(), userDetails.getPassword(), userDetails.getAuthorities());

@@ -1,5 +1,8 @@
 package br.com.springbank.service.token;
 
+import br.com.springbank.service.exceptions.token.ClaimNameRequiredException;
+import br.com.springbank.service.exceptions.token.InvalidOrExpiredTokenException;
+import br.com.springbank.service.exceptions.token.InvalidTokenSubjectException;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
@@ -8,11 +11,9 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.JWTVerifier;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -60,18 +61,21 @@ public class TokenService {
 
             return jwtVerifier.verify(token);
         } catch (JWTVerificationException ex) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token inválido ou expirado.");
+            throw new InvalidOrExpiredTokenException("Token inválido ou expirado.");
         }
     }
 
     public String extractUsername(DecodedJWT decodedJWT) {
         if (decodedJWT == null || decodedJWT.getSubject() == null) {
-            throw new IllegalArgumentException("Token inválido: subject ausente.");
+            throw new InvalidTokenSubjectException("Token inválido: subject ausente.");
         }
         return decodedJWT.getSubject();
     }
 
     public Claim extractClaimByName(DecodedJWT decodedJWT, String claimName) {
+        if (claimName == null || claimName.trim().isEmpty()) {
+            throw new ClaimNameRequiredException("Nome do claim não pode ser nulo ou vazio.");
+        }
         return decodedJWT.getClaim(claimName);
     }
 }

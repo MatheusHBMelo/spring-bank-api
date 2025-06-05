@@ -10,6 +10,7 @@ import br.com.springbank.domain.repositories.user.UserRepository;
 import br.com.springbank.event.RegisterCompletedEvent;
 import br.com.springbank.service.account.AccountService;
 import br.com.springbank.service.exceptions.token.InvalidOrExpiredTokenException;
+import br.com.springbank.service.exceptions.user.RoleNotFoundException;
 import br.com.springbank.service.exceptions.user.UserNotFoundException;
 import br.com.springbank.service.token.TokenService;
 import com.auth0.jwt.interfaces.DecodedJWT;
@@ -65,7 +66,7 @@ public class UserService {
     @Transactional
     public void registerUser(RegisterDto registerDto) {
         RoleEntity role = this.roleRepository.findByName(RoleEnum.USER)
-                .orElseThrow(() -> new RuntimeException("Essa role não existe no sistema"));
+                .orElseThrow(() -> new RoleNotFoundException("Essa role não existe no sistema"));
 
         UserEntity newUser = this.createUser(registerDto, role);
 

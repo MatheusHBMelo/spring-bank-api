@@ -3,6 +3,7 @@ package br.com.springbank.domain.repositories.account;
 import br.com.springbank.domain.entities.account.TransactionEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,5 +16,5 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
                    OR t.destinationAccount.id = :accountId
                 ORDER BY t.createdAt DESC
             """)
-    List<TransactionEntity> findAllByAccountId(Long accountId);
+    List<TransactionEntity> findAllByAccountId(@Param("accountId") Long accountId);
 }

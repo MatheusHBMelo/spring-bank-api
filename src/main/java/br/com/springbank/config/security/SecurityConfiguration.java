@@ -39,6 +39,11 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET, "/transaction/statement").authenticated()
                         .requestMatchers(HttpMethod.GET, "/admin/users", "/admin/user", "/admin/transactions", "/admin/accounts", "/admin/account").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/admin/user").hasRole("ADMIN")
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
                         .anyRequest().denyAll()
                 )
                 .addFilterBefore(tokenFilter, BasicAuthenticationFilter.class)

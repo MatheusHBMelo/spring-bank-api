@@ -3,6 +3,7 @@ package br.com.springbank.controller.admin;
 import br.com.springbank.controller.admin.dto.AccountResponseDto;
 import br.com.springbank.controller.admin.dto.TransactionsResponseDto;
 import br.com.springbank.controller.admin.dto.UsersResponseDto;
+import br.com.springbank.controller.admin.impl.AdminControllerImpl;
 import br.com.springbank.controller.transaction.dto.AccountSimpleDto;
 import br.com.springbank.domain.entities.user.StatusEnum;
 import br.com.springbank.domain.enums.TransactionType;
@@ -32,7 +33,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = AdminController.class)
+@WebMvcTest(controllers = AdminControllerImpl.class)
 @AutoConfigureMockMvc(addFilters = true)
 class AdminControllerTest {
     @Autowired

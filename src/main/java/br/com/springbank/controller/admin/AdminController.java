@@ -3,49 +3,57 @@ package br.com.springbank.controller.admin;
 import br.com.springbank.controller.admin.dto.AccountResponseDto;
 import br.com.springbank.controller.admin.dto.TransactionsResponseDto;
 import br.com.springbank.controller.admin.dto.UsersResponseDto;
-import br.com.springbank.service.admin.AdminService;
-import org.springframework.http.HttpStatus;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-@RestController
-@RequestMapping(path = "/admin")
-public class AdminController {
-    private final AdminService adminService;
+@Tag(name = "Admin Controller", description = "Funções administrativas")
+public interface AdminController {
+    @Operation(summary = "Find All Users", description = "Retorna todos os usuários do sistema", tags = {"admin", "get"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "200")
+    })
+    ResponseEntity<List<UsersResponseDto>> findAllUsers();
 
-    public AdminController(AdminService adminService) {
-        this.adminService = adminService;
-    }
+    @ApiResponses({
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "400"),
+            @ApiResponse(responseCode = "404")
+    })
+    @Operation(summary = "Find User by Username", description = "Retorna um usuario de acordo com seu Username", tags = {"admin", "get"})
+    ResponseEntity<UsersResponseDto> findUserByUsername(@Parameter(description = "Username") @RequestParam("username") String username);
 
-    @GetMapping(path = "/users")
-    public ResponseEntity<List<UsersResponseDto>> findAllUsers() {
-        return ResponseEntity.status(HttpStatus.OK).body(this.adminService.findAllUsers());
-    }
+    @ApiResponses({
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "400"),
+            @ApiResponse(responseCode = "404"),
+            @ApiResponse(responseCode = "409")
+    })
+    @Operation(summary = "Disable User by Username", description = "Busca usuário com seu username e o desabilita", tags = {"admin", "patch"})
+    ResponseEntity<UsersResponseDto> disableUserByUsername(@Parameter(description = "Username") @RequestParam("username") String username);
 
-    @GetMapping(path = "/user")
-    public ResponseEntity<UsersResponseDto> findUserByUsername(@RequestParam("username") String username) {
-        return ResponseEntity.ok(this.adminService.findUserByUsername(username));
-    }
+    @ApiResponses({
+            @ApiResponse(responseCode = "200")
+    })
+    @Operation(summary = "Find All Transactions", description = "Retorna todas as transações do sistema", tags = {"admin", "get"})
+    ResponseEntity<List<TransactionsResponseDto>> findAllTransactions();
 
-    @PatchMapping(path = "/user")
-    public ResponseEntity<UsersResponseDto> disableUserByUsername(@RequestParam("username") String username) {
-        return ResponseEntity.ok(this.adminService.disableUser(username));
-    }
+    @ApiResponses({
+            @ApiResponse(responseCode = "200")
+    })
+    @Operation(summary = "Find All Accounts", description = "Retorna todas as contas bancárias do sistema", tags = {"admin", "get"})
+    ResponseEntity<List<AccountResponseDto>> findAllAccounts();
 
-    @GetMapping(path = "/transactions")
-    public ResponseEntity<List<TransactionsResponseDto>> findAllTransactions() {
-        return ResponseEntity.status(HttpStatus.OK).body(this.adminService.findAllTransactions());
-    }
-
-    @GetMapping(path = "/accounts")
-    public ResponseEntity<List<AccountResponseDto>> findAllAccounts() {
-        return ResponseEntity.status(HttpStatus.OK).body(this.adminService.findAllAccounts());
-    }
-
-    @GetMapping(path = "/account")
-    public ResponseEntity<AccountResponseDto> findAccountByNumber(@RequestParam("numberAccount") String numberAccount) {
-        return ResponseEntity.ok(this.adminService.findAccountByAccountNumber(numberAccount));
-    }
+    @ApiResponses({
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "404")
+    })
+    @Operation(summary = "Find Account by Account Number", description = "Retorna uma conta bancária dado seu número", tags = {"admin", "get"})
+    ResponseEntity<AccountResponseDto> findAccountByNumber(@Parameter(description = "accountNumber") @RequestParam("numberAccount") String numberAccount);
 }

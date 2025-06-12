@@ -1,6 +1,7 @@
 package br.com.springbank.controller.transaction;
 
 import br.com.springbank.controller.transaction.dto.*;
+import br.com.springbank.controller.transaction.impl.TransactionControllerImpl;
 import br.com.springbank.domain.entities.account.AccountEntity;
 import br.com.springbank.domain.entities.user.StatusEnum;
 import br.com.springbank.domain.entities.user.UserEntity;
@@ -32,9 +33,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = TransactionController.class)
+@WebMvcTest(controllers = TransactionControllerImpl.class)
 @AutoConfigureMockMvc(addFilters = false)
-class TransactionControllerTest {
+class TransactionControllerImplTest {
     @Autowired
     private MockMvc mockMvc;
 

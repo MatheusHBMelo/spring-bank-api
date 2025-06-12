@@ -3,35 +3,27 @@ package br.com.springbank.controller.auth;
 import br.com.springbank.controller.auth.dto.LoginDto;
 import br.com.springbank.controller.auth.dto.LoginResponseDto;
 import br.com.springbank.controller.auth.dto.RegisterDto;
-import br.com.springbank.service.user.AuthenticationService;
-import br.com.springbank.service.user.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-@RequestMapping(path = "/auth")
-public class AuthController {
-    private final UserService userService;
-    private final AuthenticationService authenticationService;
+@Tag(name = "Auth Controller", description = "Registro e Login de usuários")
+public interface AuthController {
+    @Operation(summary = "Register User", description = "Registra um novo usuário no sistema", tags = {"auth", "post"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "404")
+    })
+    ResponseEntity<Void> register(@RequestBody @Valid RegisterDto registerDto);
 
-    public AuthController(UserService userService, AuthenticationService authenticationService) {
-        this.userService = userService;
-        this.authenticationService = authenticationService;
-    }
-
-    @PostMapping(path = "/register")
-    public ResponseEntity<Void> register(@RequestBody @Valid RegisterDto registerDto) {
-        this.userService.registerUser(registerDto);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
-
-    @PostMapping(path = "/login")
-    public ResponseEntity<LoginResponseDto> login(@RequestBody @Valid LoginDto loginDto) {
-        return ResponseEntity.ok(this.authenticationService.loginUser(loginDto));
-    }
+    @Operation(summary = "Login User", description = "Autentica usuário no sistema", tags = {"auth", "post"})
+    @ApiResponses({
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "401")
+    })
+    ResponseEntity<LoginResponseDto> login(@RequestBody @Valid LoginDto loginDto);
 }

@@ -3,6 +3,7 @@ package br.com.springbank.controller.auth;
 import br.com.springbank.controller.auth.dto.LoginDto;
 import br.com.springbank.controller.auth.dto.LoginResponseDto;
 import br.com.springbank.controller.auth.dto.RegisterDto;
+import br.com.springbank.controller.auth.impl.AuthControllerImpl;
 import br.com.springbank.service.token.TokenService;
 import br.com.springbank.service.user.AuthenticationService;
 import br.com.springbank.service.user.UserService;
@@ -27,9 +28,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = AuthController.class)
+@WebMvcTest(controllers = AuthControllerImpl.class)
 @AutoConfigureMockMvc(addFilters = false)
-class AuthControllerTest {
+class AuthControllerImplTest {
     @Autowired
     private MockMvc mockMvc;
 
